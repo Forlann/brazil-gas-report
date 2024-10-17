@@ -2,9 +2,12 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
+# Cleaning DataBase
 df = pd.read_table("data/gas.tsv")
 df['DATA INICIAL'] = pd.to_datetime(df['DATA INICIAL'])
-df['COEF DE VARIAÇÃO DISTRIBUIÇÃO'] = pd.to_numeric(df['COEF DE VARIAÇÃO DISTRIBUIÇÃO'].replace(['-'], 0)) 
+df['COEF DE VARIAÇÃO DISTRIBUIÇÃO'] = pd.to_numeric(df['COEF DE VARIAÇÃO DISTRIBUIÇÃO'].replace('-', None)) 
+df['COEF DE VARIAÇÃO DISTRIBUIÇÃO'] =  df['COEF DE VARIAÇÃO DISTRIBUIÇÃO'] < 0
+
 
 # Start
 st.title("Variação do Preço do Gas - Brasil")
@@ -30,10 +33,15 @@ price_regiao_df = pd.DataFrame({
    # 'COEF VARIAÇÃO': [median_price(region[1]) for region in regions]
 })
 
-price_variation = df['COEF DE VARIAÇÃO DISTRIBUIÇÃO'].mean()
+price_variation = round(df['COEF DE VARIAÇÃO DISTRIBUIÇÃO'].mean(), 2)
 
-st.subheader("Coeficientes de variação de preço")
-st.metric(label="Total", value=price_variation)
+st.subheader("Métricas")
+st.metric(label="Coeficientes de variação de preço", value=price_variation)
+st.metric(label="Média de preço - Norte", value=round(price_regiao_df['PREÇO MÉDIO'][0].mean(), 2))
+st.metric(label="Média de preço - Sul", value=round(price_regiao_df['PREÇO MÉDIO'][1].mean(), 2))
+st.metric(label="Média de preço - Nordeste", value=round(price_regiao_df['PREÇO MÉDIO'][2].mean(), 2))
+st.metric(label="Média de preço - Sudeste", value=round(price_regiao_df['PREÇO MÉDIO'][3].mean(), 2))
+st.metric(label="Média de preço - Centro Oeste", value=round(price_regiao_df['PREÇO MÉDIO'][4].mean(), 2))   
 
 
 st.subheader('Preço X Região')

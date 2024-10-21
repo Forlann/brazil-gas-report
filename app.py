@@ -6,7 +6,15 @@ import numpy as np
 df = pd.read_table("data/gas.tsv")
 df['DATA INICIAL'] = pd.to_datetime(df['DATA INICIAL'])
 df['COEF DE VARIAÇÃO DISTRIBUIÇÃO'] = pd.to_numeric(df['COEF DE VARIAÇÃO DISTRIBUIÇÃO'].replace('-', None)) 
-df['COEF DE VARIAÇÃO DISTRIBUIÇÃO'] =  df['COEF DE VARIAÇÃO DISTRIBUIÇÃO'] < 0
+df['COEF DE VARIAÇÃO DISTRIBUIÇÃO'] =  df['COEF DE VARIAÇÃO DISTRIBUIÇÃO'] <= 0
+# Grouping values 
+df.replace(
+   {'PRODUTO': {
+      'OLEO DIESEL': 'ÓLEO DIESEL',
+      'OLEO DIESEL S10': 'ÓLEO DIESEL S10',
+      'GLP': 'GÁS LIQUEIFEITO DE PETRÓLEO',
+      'GNV': 'GÁS NATURAL VEICULAR'}}
+   , inplace=True)
 
 
 # Start
@@ -17,20 +25,25 @@ st.divider()
 
 # Compare price between regions (Norte, Sul, Nordeste, etc...)
 regions = ['NORTE', 'SUL', 'NORDESTE', 'SUDESTE', 'CENTRO OESTE']
+selected_product = st.selectbox("Tipo de Gas", df['PRODUTO'].unique().tolist())
 
 def median_price(region):
    mask = (
       (df['REGIÃO'] == region) &
       (df['DATA INICIAL'].dt.year >= year_range[0]) &
-      (df['DATA INICIAL'].dt.year <= year_range[1])
+      (df['DATA INICIAL'].dt.year <= year_range[1]) &
+      (df['PRODUTO'] == selected_product)
    )
    
-   return round(df[mask]['PREÇO MÉDIO REVENDA'].mean(), 2)
+   return round(df[mask]['PREÇO MÉDIO REVENDA'].mean(), 2), round(df[mask]['COEF DE VARIAÇÃO DISTRIBUIÇÃO'].mean(), 2)
+
+m = [median_price(region) for region in regions]
+st.write(m)
 
 price_regiao_df = pd.DataFrame({
    'REGIÃO': regions,
-   'PREÇO MÉDIO': [median_price(region) for region in regions],
-   # 'COEF VARIAÇÃO': [median_price(region[1]) for region in regions]
+   'PREÇO MÉDIO': [m[index][0] for index in range(0, 5)],
+   'COEF VARIAÇÃO': [m[index][1] for index in range(0, 5)]
 })
 
 price_variation = round(df['COEF DE VARIAÇÃO DISTRIBUIÇÃO'].mean(), 2)
